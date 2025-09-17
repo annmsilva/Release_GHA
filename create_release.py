@@ -102,9 +102,11 @@ def main():
 
     create_github_release(token, repo, new_tag, release_name, release_body)
 
-    # Set output variables for the release URL and version
-    print(f"::set-output name=release_url::https://github.com/{repo}/releases/tag/{new_tag}")
-    print(f"::set-output name=release_version::{new_tag}")
+    github_output = os.environ.get("GITHUB_OUTPUT")
+    if github_output:
+        with open(github_output, "a") as f:
+            f.write(f"release_url=https://github.com/{repo}/releases/tag/{new_tag}\n")
+            f.write(f"release_version={new_tag}\n")
 
 
 if __name__ == "__main__":
