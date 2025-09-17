@@ -48,12 +48,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
 
-      - name: Report status to Microsoft Teams
-        shell: bash
-        run: |
-          uv sync --package automation
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
 
-          uv run --package automation python packages/automation/src/automation/scripts/ci_report_status.py \
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests PyYAML
+
+      - name: Report status to Microsoft Teams
+        run: |
+          python report_status.py \
             --webhook-url "${{ vars.RELEASE_WEBHOOK_URL }}" \
             --sku "${{ needs.setup.outputs.skus }}" \
             --environment "KXSD10_PYEA_LATEST" \
