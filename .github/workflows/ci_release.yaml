@@ -16,6 +16,9 @@ permissions:
 jobs:
   create_release:
     runs-on: ubuntu-latest
+    outputs:
+      release_url: ${{ steps.run_release.outputs.release_url }}
+      release_version: ${{ steps.run_release.outputs.release_version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
@@ -31,8 +34,28 @@ jobs:
           pip install requests PyYAML
 
       - name: Run release candidate creator
+        id: run_release
         run: python create_release.py
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_REF: ${{ github.ref }}
+
+  report_status:
+    runs-on: ubuntu-latest
+    needs: create_release
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+
+      - name: Report status to Microsoft Teams
+        shell: bash
+        run: |
+          uv sync --package automation
+
+          uv run --package automation python packages/automation/src/automation/scripts/ci_report_status.py \
+            --webhook-url "${{ vars.RELEASE_WEBHOOK_URL }}" \
+            --sku "${{ needs.setup.outputs.skus }}" \
+            --environment "KXSD10_PYEA_LATEST" \
+            --release_url "${{ needs.create_release.outputs.release_url }}" \
+            --release-version "${{ needs.create_release.outputs.release_version }}"

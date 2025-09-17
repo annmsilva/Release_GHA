@@ -81,9 +81,6 @@ def create_github_release(token, repo, tag, name, body, draft=False, prerelease=
 
 
 def main():
-
-    # load_dotenv()
-        
     # Environment vars
     token = os.environ.get("GITHUB_TOKEN") 
     repo = os.environ.get("GITHUB_REPOSITORY")  # e.g. owner/repo
@@ -104,6 +101,10 @@ def main():
     release_body = f"Release Candidate {new_tag} based on branch {branch_name}."
 
     create_github_release(token, repo, new_tag, release_name, release_body)
+
+    # Set output variables for the release URL and version
+    print(f"::set-output name=release_url::https://github.com/{repo}/releases/tag/{new_tag}")
+    print(f"::set-output name=release_version::{new_tag}")
 
 
 if __name__ == "__main__":
